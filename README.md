@@ -1,5 +1,5 @@
 ## 实时猫 Android SDK Demo
-基于 [实时猫 Android SDK](https://shishimao.com) 开发的样例 Demo
+基于 [实时猫 Android SDK](https://shishimao.com) 开发的样例 Demo,此样例功能尚不完善，仅供测试。
 
 ## 说明
 此样例用于演示如何在`实时猫SDK`中，实现切换音频设备功能。
