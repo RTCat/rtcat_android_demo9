@@ -5,13 +5,13 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.shishimao.sdk.Configs;
 import com.shishimao.sdk.Errors;
 import com.shishimao.sdk.LocalStream;
+import com.shishimao.sdk.LocalStream.StreamObserver;
 import com.shishimao.sdk.RTCat;
 import com.shishimao.sdk.Receiver;
 import com.shishimao.sdk.Receiver.ReceiverObserver;
@@ -20,13 +20,11 @@ import com.shishimao.sdk.Sender;
 import com.shishimao.sdk.Sender.SenderObserver;
 import com.shishimao.sdk.Session;
 import com.shishimao.sdk.Session.SessionObserver;
-import com.shishimao.sdk.LocalStream.StreamObserver;
 import com.shishimao.sdk.apprtc.AppRTCAudioManager;
 import com.shishimao.sdk.http.RTCatRequests;
 import com.shishimao.sdk.tools.L;
 import com.shishimao.sdk.view.VideoPlayer;
 import com.shishimao.sdk.view.VideoPlayerLayout;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,12 +51,13 @@ public class MainActivity extends Activity {
 
     ArrayList<VideoPlayer> render_list = new ArrayList<>();
     HashMap<String, VideoPlayerLayout> render2_list = new HashMap<>();
+    HashMap<String, String> pos2_list = new HashMap<>();
 
     int layout_width = 50;
     int layout_height = 50;
 
-    int x = 0;
-    int y = 0;
+//    Pos[] poses = new Pos[4];
+    Pos[] poses = {new Pos(0,0),new Pos(0,50),new Pos(50,0)};
 
     public String token;
 
@@ -77,7 +76,7 @@ public class MainActivity extends Activity {
         videoRenderLayout = (VideoPlayerLayout) findViewById(R.id.local_video_layout);
         videoRenderLayout.setPosition(50,50,50,50);
 
-        cat = new RTCat(MainActivity.this,true,true,true,false, AppRTCAudioManager.AudioDevice.SPEAKER_PHONE,RTCat.CodecSupported.H264, L.VERBOSE);
+        cat = new RTCat(MainActivity.this,true,true,true,false, AppRTCAudioManager.AudioDevice.SPEAKER_PHONE, RTCat.CodecSupported.H264, L.VERBOSE);
         cat.addObserver(new RTCat.RTCatObserver() {
             @Override
             public void init() {
@@ -110,7 +109,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         t("Switch audio device to " + AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
-                        //TODO
+                        //TODO setAudioDevice
                         cat.setAudioDevice(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
                     }
                 });
@@ -123,7 +122,7 @@ public class MainActivity extends Activity {
 
         cat.initVideoPlayer(localVideoRenderer);
 
-        localStream = cat.createStream(true,true,15,RTCat.VideoFormat.Lv0, LocalStream.CameraFacing.FRONT);
+        localStream = cat.createStream(true,true,15, RTCat.VideoFormat.Lv0, LocalStream.CameraFacing.FRONT);
 
         localStream.addObserver(new StreamObserver() {
 
@@ -165,11 +164,10 @@ public class MainActivity extends Activity {
                             l(token + " is in");
                             l(String.valueOf(session.getWits().size()));
 
-                            if (session.getWits().size() < 3)
-                            {
-                                JSONObject attr = new JSONObject();
-                                session.sendTo(localStream,true,attr, token);
-                            }
+
+                            JSONObject attr = new JSONObject();
+                            session.sendTo(localStream,true,attr, token);
+
                         }
 
                         @Override
@@ -180,14 +178,8 @@ public class MainActivity extends Activity {
                         @Override
                         public void out(String token) {
                             final VideoPlayerLayout layout =  render2_list.get(token);
-
-                            if( x == 0 && y == 50)
-                            {
-                                x = 50 ; y =0;
-                            }else if(x == 50 && y == 0)
-                            {
-                                x = 0;
-                            }
+                            int i = Integer.parseInt(pos2_list.get(token)) ;
+                            poses[i].isEmpty = true;
 
 
                             runOnUiThread(new Runnable() {
@@ -208,10 +200,6 @@ public class MainActivity extends Activity {
 
                             String wit = "";
                             for (int i = 0; i < wits.size(); i++) {
-                                if( i == 3)
-                                {
-                                    break;
-                                }
                                 try {
                                     wit = wit + wits.get(i);
 
@@ -267,15 +255,15 @@ public class MainActivity extends Activity {
 
                                                 remote_video_layout.addView(videoViewRemote);
 
-                                                remote_video_layout.setPosition(x,y,layout_width,layout_height);
+                                                int i;
+                                                for (i = 0;i<poses.length;i++){
+                                                    if(poses[i].isEmpty)   break;
 
-                                                if( x == 0 && y == 0)
-                                                {
-                                                    x = 50;
-                                                }else if(x == 50 && y == 0)
-                                                {
-                                                    x = 0; y= 50;
                                                 }
+
+                                                remote_video_layout.setPosition(poses[i].x,poses[i].y,layout_width,layout_height);
+                                                poses[i].isEmpty = false;
+                                                pos2_list.put(receiver.getFrom(), i + "");
 
                                                 layout.addView(remote_video_layout);
 
@@ -442,5 +430,14 @@ public class MainActivity extends Activity {
         super.onResume();
     }
 
+    class Pos{
+        int x;
+        int y;
+        boolean isEmpty = true;
+        Pos(int x,int y){
+            this.x = x;
+            this.y = y;
+        }
+    }
 
 }
