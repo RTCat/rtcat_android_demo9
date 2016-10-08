@@ -89,6 +89,13 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void error(Errors errors) {
+
+            }
+        });
+
+        cat.addAudioDeviceObserver(new RTCat.AudioDeviceObserver() {
+            @Override
             public void onAudioDeviceConnected(final AppRTCAudioManager.AudioDevice device) {
                 l("Audio device connected :" + device);
                 runOnUiThread(new Runnable() {
@@ -343,9 +350,10 @@ public class MainActivity extends Activity {
                         }
 
                         @Override
-                        public void error(String error) {
+                        public void error(Errors errors) {
 
                         }
+
                     }
 
                     SessionHandler sh = new SessionHandler();
