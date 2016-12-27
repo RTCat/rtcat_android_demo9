@@ -20,6 +20,7 @@ import com.shishimao.sdk.Sender;
 import com.shishimao.sdk.Sender.SenderObserver;
 import com.shishimao.sdk.Session;
 import com.shishimao.sdk.Session.SessionObserver;
+import com.shishimao.sdk.WebRTCLog;
 import com.shishimao.sdk.apprtc.AppRTCAudioManager;
 import com.shishimao.sdk.http.RTCatRequests;
 import com.shishimao.sdk.tools.L;
@@ -32,6 +33,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 
 public class MainActivity extends Activity {
@@ -96,30 +98,8 @@ public class MainActivity extends Activity {
 
         cat.addAudioDeviceObserver(new RTCat.AudioDeviceObserver() {
             @Override
-            public void onAudioDeviceConnected(final AppRTCAudioManager.AudioDevice device) {
-                l("Audio device connected :" + device);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        t("Switch audio device to " + device);
-                        //TODO change AudioDevice to new device
-                        cat.setAudioDevice(device);
-                    }
-                });
+            public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice audioDevice, Set<AppRTCAudioManager.AudioDevice> set) {
 
-            }
-
-            @Override
-            public void onAudioDeviceDisconnected(AppRTCAudioManager.AudioDevice device) {
-                l("Audio device disconnected :" + device);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        t("Switch audio device to " + AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
-                        //TODO setAudioDevice
-                        cat.setAudioDevice(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
-                    }
-                });
             }
         });
         cat.init();
@@ -234,10 +214,19 @@ public class MainActivity extends Activity {
 
                                 receiver.addObserver(new ReceiverObserver() {
                                     @Override
-                                    public void log(JSONObject object) {
-                                        Log.d("Receiver Log ->",object.toString());
+                                    public void log(WebRTCLog.ReceiverClientLog receiverClientLog) {
+
                                     }
 
+                                    @Override
+                                    public void receiveFile(String s) {
+
+                                    }
+
+                                    @Override
+                                    public void receiveFileFinish(File file) {
+
+                                    }
 
                                     @Override
                                     public void error(Errors errors) {
@@ -296,10 +285,6 @@ public class MainActivity extends Activity {
 
                                     }
 
-                                    @Override
-                                    public void file(File file) {
-
-                                    }
                                 });
 
                                 receiver.response();
@@ -315,8 +300,13 @@ public class MainActivity extends Activity {
                             senders.put(sender.getId(), sender);
                             sender.addObserver(new SenderObserver() {
                                 @Override
-                                public void log(JSONObject object) {
-                                    Log.d("Sender Log ->",object.toString());
+                                public void log(WebRTCLog.SenderClientLog senderClientLog) {
+
+                                }
+
+                                @Override
+                                public void fileSendFinished() {
+
                                 }
 
                                 @Override
@@ -332,15 +322,9 @@ public class MainActivity extends Activity {
 
                                 }
 
-                                @Override
-                                public void fileSending(int x){
 
-                                }
 
-                                @Override
-                                public void fileFinished(){
 
-                                }
                             });
                         }
 
